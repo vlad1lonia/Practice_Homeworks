@@ -1,77 +1,72 @@
-import java.net.URI;
-import java.util.*;
-
-import javax.tools.*;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import languages.*;
+import java.io.*;
 import java.util.*;
 
 public class Main {
 
+    private static final Scanner scan = new Scanner(System.in);
+
+    /**
+     * The main programme
+     * @param args
+     */
     public static void main(String[] args) {
-        // Sample code for analysis
-        Scanner scan = new Scanner(System.in);
-        StringBuilder code = new StringBuilder();
 
-        System.out.println("Write down the code that you need to analyze for errors:\n");
+        System.out.print("Enter the language: "); String language = scan.next();
+        System.out.print("Enter the path to code: "); String pathToCode = scan.next();
 
-        String line = "";
-        while (!Objects.equals(line, "/end")) {
-            line = scan.nextLine();
-            if (!Objects.equals(line, "/end")) {
-                code.append('\n').append(line);
-            }
-        }
-
-        System.out.println();
-
-        // Analyze the code for errors
-        List<Diagnostic<? extends JavaFileObject>> diagnostics = analyzeCode(code.toString());
-
-        // Print the errors to the console
-        printErrors(diagnostics);
-    }
-
-    public static List<Diagnostic<? extends JavaFileObject>> analyzeCode(String code) {
-        // Prepare the compiler
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-
-        // Prepare the in-memory Java source file
-        JavaFileObject source = new JavaSourceFromString("Example", code);
-
-        // Compile the code
-        JavaCompiler.CompilationTask task = compiler.getTask(null, null, diagnostics, null, null, Collections.singletonList(source));
-        boolean success = task.call();
-
-        if (!success) {
-            // Compilation failed, return the diagnostics
-            return diagnostics.getDiagnostics();
-        }
-
-        // No errors, return an empty list
-        return Collections.emptyList();
-    }
-
-    public static void printErrors(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
-        for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics) {
-            System.out.println("Error: " + diagnostic.getMessage(null));
+        try {
+            String code = readCodeFromFile(pathToCode);
+            analyzeCode(language, code);
+        } catch (IOException e) {
+            System.out.println("Error reading the file: " + e.getMessage());
         }
     }
 
-    // JavaFileObject implementation for in-memory Java source code
-    static class JavaSourceFromString extends SimpleJavaFileObject {
-        final String code;
+    /**
+     * A method that reads code from file
+     * @param filePath
+     * @return A new instance of String
+     * @throws IOException
+     */
+    private static String readCodeFromFile(String filePath) throws IOException {
+        StringBuilder codeBuilder = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+        String line;
 
-        JavaSourceFromString(String name, String code) {
-
-            super(URI.create("string:///" + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
-            this.code = code;
+        while ((line = reader.readLine()) != null) {
+            codeBuilder.append(line).append("\n");
         }
 
-        @Override
-        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-            return code;
+        reader.close();
+        return codeBuilder.toString();
+    }
+
+    /**
+     * A method that paraemters and chooses which language has to be checked
+     * @param language
+     * @param code
+     */
+    private static void analyzeCode(String language, String code) {
+
+        if (language.equalsIgnoreCase("java")) {
+            // Perform Java code analysis
+            System.out.println("Performing " + language + " code analysis...");
+            Java.analyzeCode(code);
+        } else if (language.equalsIgnoreCase("c++")) {
+            // Perform C++ code analysis
+            System.out.println("Performing " + language + " code analysis...");
+            CPP.analyzeCode(code);
+        } else if (language.equalsIgnoreCase("kotlin")) {
+            // Perform Kotlin code analysis
+            System.out.println("Performing " + language + " code analysis...");
+            Kotlin.analyzeCode(code);
+        } else if (language.equalsIgnoreCase("python")) {
+            // Perform Python code analysis
+            System.out.println("Performing " + language + " code analysis...");
+            Python.analyzeCode(code);
+        } else {
+            System.out.println("Unsupported language: " + language);
         }
     }
 }
